@@ -1,10 +1,12 @@
 import express from 'express';
 import chatRouter from "./routers/chatRoute";
 import fileDB from "./fileDB";
+import cors from 'cors';
 
 const app = express();
-const port = 8001;
+const port = 8000;
 
+app.use(cors())
 app.use(express.json())
 app.use('/', chatRouter)
 
