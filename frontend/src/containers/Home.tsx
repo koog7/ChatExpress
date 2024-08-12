@@ -1,8 +1,9 @@
-import {ChangeEvent, FormEvent, useState} from 'react';
+import {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {Button, TextField} from "@mui/material";
 import CardBlock from "../components/CardBlock.tsx";
-import {useDispatch} from "react-redux";
-import {createPost} from "./Slice/FetchSlice.ts";
+import {useDispatch, useSelector} from "react-redux";
+import {createPost, getMessages} from "./Slice/FetchSlice.ts";
+import {RootState} from "../app/store.ts";
 
 const Home = () => {
 
@@ -10,8 +11,11 @@ const Home = () => {
     const dispatch = useDispatch();
     const [authorText , setAuthorText] = useState('')
     const [messageText , setMessageText] = useState('')
+    const {messages, loading, error} = useSelector((state: RootState) => state.chat);
 
-
+    useEffect(() => {
+        dispatch(getMessages());
+    }, [dispatch]);
     const submitPost = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         dispatch(createPost({author:authorText, message:messageText}))
@@ -86,7 +90,9 @@ const Home = () => {
                     <Button variant="contained" type={"submit"}>Send!</Button>
                 </form>
                 <div style={{marginTop:'20px'}}>
-                    <CardBlock />
+                    {messages.map(message => (
+                        <CardBlock key={message.id} id={message.id} message={message.message} author={message.author} date={message.date}/>
+                    ))}
                 </div>
             </div>
         </div>
