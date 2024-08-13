@@ -1,16 +1,24 @@
 import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import axiosAPI from "../../axios/AxiosAPI.ts";
 
-interface MessageProps {
-    author: string;
+
+interface Message {
+    id: string;
     message: string;
+    author: string;
+    date: string;
+}
+
+interface MessageProps {
+    messages: Message[];
+    lastDate: string;
     loading: boolean;
     error: boolean;
 }
 
 const initialState: MessageProps = {
-    author: '',
-    message: '',
+    messages: [],
+    lastDate: '',
     loading: false,
     error: false,
 };
@@ -20,12 +28,10 @@ export const createPost = createAsyncThunk<string, { author: string; message: st
     'chat/postMessage',
     async ({ author, message } ) => {
         try {
-            console.log('post try auth and msg' , author , message)
             const response = await axiosAPI.post('/messages', {
                 author,
                 message,
             });
-            console.log('response ', response)
             return response.data;
         } catch (error) {
             return error.message;
@@ -33,6 +39,28 @@ export const createPost = createAsyncThunk<string, { author: string; message: st
     }
 );
 
+export const getMessages = createAsyncThunk<Message[]>(
+    'chat/getMessage',
+    async () => {
+        try {
+            const response = await axiosAPI.get('/messages');
+            return response.data;
+        } catch (error) {
+            return error.message;
+        }
+    }
+);
+export const getLastMessages = createAsyncThunk<Message[] , string>(
+    'chat/getLastMessage',
+    async (lastDate: string) => {
+        try {
+            const response = await axiosAPI.get(`/messages?datetime=${lastDate}`);
+            return response.data;
+        } catch (error) {
+            return error.message;
+        }
+    }
+);
 const chatSlice = createSlice({
     name: 'chat',
     initialState,
@@ -47,17 +75,39 @@ const chatSlice = createSlice({
                 state.loading = true;
                 state.error = false;
             })
-            .addCase(createPost.fulfilled, (state:MessageProps, action: PayloadAction<string>) => {
+            .addCase(createPost.fulfilled, (state:MessageProps) => {
                 state.loading = false;
                 state.error = false;
-                console.log(action.payload)
-                // state.author = action.payload.author;
-                // state.message = action.payload.author;
             })
             .addCase(createPost.rejected, (state:MessageProps) => {
                 state.loading = false;
                 state.error = true;
-            })
+            }).addCase(getMessages.pending, (state:MessageProps) => {
+                state.loading = true;
+                state.error = false;
+            }).addCase(getMessages.fulfilled, (state:MessageProps, action: PayloadAction<Message[]>) => {
+                state.loading = false;
+                state.error = false;
+                state.messages = action.payload;
+                state.lastDate = action.payload[action.payload.length - 1].date;
+            }).addCase(getMessages.rejected, (state:MessageProps) => {
+                state.loading = false;
+                state.error = true;
+            }).addCase(getLastMessages.pending, (state:MessageProps) => {
+                state.loading = true;
+                state.error = false;
+            }).addCase(getLastMessages.fulfilled, (state:MessageProps, action: PayloadAction<Message[]>) => {
+                state.loading = false;
+                state.error = false;
+                if (action.payload) {
+                    const exID = state.messages.map(message => message.id);
+                    const newMsg = action.payload.filter(message => !exID.includes(message.id));
+                    state.messages = [...state.messages, ...newMsg];
+                }
+            }).addCase(getLastMessages.rejected, (state:MessageProps) => {
+                state.loading = false;
+                state.error = true;
+            });
     },
 });
 
