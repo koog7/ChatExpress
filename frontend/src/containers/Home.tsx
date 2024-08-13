@@ -2,7 +2,7 @@ import {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {Button, TextField} from "@mui/material";
 import CardBlock from "../components/CardBlock.tsx";
 import {useDispatch, useSelector} from "react-redux";
-import {createPost, getMessages} from "./Slice/FetchSlice.ts";
+import {createPost, getLastMessages, getMessages} from "./Slice/FetchSlice.ts";
 import {RootState} from "../app/store.ts";
 
 const Home = () => {
@@ -11,14 +11,24 @@ const Home = () => {
     const dispatch = useDispatch();
     const [authorText , setAuthorText] = useState('')
     const [messageText , setMessageText] = useState('')
-    const {messages, loading, error} = useSelector((state: RootState) => state.chat);
+    const {messages, lastDate , loading, error} = useSelector((state: RootState) => state.chat);
 
     useEffect(() => {
         dispatch(getMessages());
     }, [dispatch]);
+
+    useEffect(() => {
+        setInterval(() => {
+            dispatch(getLastMessages(lastDate));
+        }, 3000);
+    }, [dispatch, lastDate]);
     const submitPost = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        dispatch(createPost({author:authorText, message:messageText}))
+        if(authorText.trim() !== '' && messageText.trim() !== ''){
+            dispatch(createPost({author:authorText, message:messageText}))
+        }
+        setAuthorText('');
+        setMessageText('');
     }
 
     return (
@@ -90,9 +100,19 @@ const Home = () => {
                     <Button variant="contained" type={"submit"}>Send!</Button>
                 </form>
                 <div style={{marginTop:'20px'}}>
-                    {messages.map(message => (
-                        <CardBlock key={message.id} id={message.id} message={message.message} author={message.author} date={message.date}/>
-                    ))}
+                    {Array.isArray(messages) ? (
+                        messages.map(message => (
+                            <CardBlock
+                                key={message.id}
+                                id={message.id}
+                                message={message.message}
+                                author={message.author}
+                                date={message.date}
+                            />
+                        ))
+                    ) : (
+                        <p>No messages available</p>
+                    )}
                 </div>
             </div>
         </div>
