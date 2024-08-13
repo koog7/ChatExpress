@@ -94,10 +94,8 @@ const chatSlice = createSlice({
                 state.loading = false;
                 state.error = true;
             }).addCase(getLastMessages.pending, (state:MessageProps) => {
-                state.loading = true;
                 state.error = false;
             }).addCase(getLastMessages.fulfilled, (state:MessageProps, action: PayloadAction<Message[]>) => {
-                state.loading = false;
                 state.error = false;
                 if (action.payload) {
                     const exID = state.messages.map(message => message.id);
@@ -105,7 +103,6 @@ const chatSlice = createSlice({
                     state.messages = [...state.messages, ...newMsg];
                 }
             }).addCase(getLastMessages.rejected, (state:MessageProps) => {
-                state.loading = false;
                 state.error = true;
             });
     },

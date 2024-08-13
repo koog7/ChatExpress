@@ -33,8 +33,13 @@ const Home = () => {
 
     return (
         <div>
+            <div id="loader-container" style={{display: loading ? 'block' : 'none'}}>
+                <div className="loader"></div>
+            </div>
+            {error && <div className="error">Something gone wrong...</div>}
             <div>
-                <form style={{display:'flex', flexDirection:'column', gap:'10px', marginTop:'25px'}} onSubmit={submitPost}>
+                <form style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '25px'}}
+                      onSubmit={submitPost}>
                     <TextField
                         id="outlined-controlled"
                         label="Author name"
@@ -99,7 +104,7 @@ const Home = () => {
                     />
                     <Button variant="contained" type={"submit"}>Send!</Button>
                 </form>
-                <div style={{marginTop:'20px'}}>
+                <div style={{marginTop: '20px'}}>
                     {Array.isArray(messages) ? (
                         messages.map(message => (
                             <CardBlock
